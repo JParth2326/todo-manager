@@ -1,24 +1,17 @@
 import sys
 import json
-import os
 
 DATA_FILE = "tasks.json"
 
 def load_tasks():
-    if not os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "w") as f:
-            json.dump([], f)
     with open(DATA_FILE, "r") as f:
         return json.load(f)
 
 def save_tasks(tasks):
     with open(DATA_FILE, "w") as f:
-        json.dump(tasks, f, indent=2)
+        json.dump(tasks, f)
 
 def add_task(desc):
-    if not desc.strip():
-        print("Error: Task description cannot be empty.")
-        return
     tasks = load_tasks()
     tasks.append({"desc": desc, "done": False})
     save_tasks(tasks)
@@ -26,54 +19,34 @@ def add_task(desc):
 
 def list_tasks():
     tasks = load_tasks()
-    if not tasks:
-        print("No tasks found.")
-        return
-    print("\nYour To-Do List:")
-    for i, task in enumerate(tasks, 1):
-        status = '✅' if task['done'] else '❌'
-        print(f"{i}. {task['desc']} - {status}")
+    for i, task in enumerate(tasks):
+        print(f"{i+1}. {task['desc']} - {'Done' if task['done'] else 'Pending'}")
 
 def complete_task(idx):
     tasks = load_tasks()
-    if idx < 1 or idx > len(tasks):
-        print("Error: Invalid task number.")
-        return
     tasks[idx-1]["done"] = True
-    save_tasks(tasks)
+    # Bug: not saving after marking as done!
     print("Task marked complete.")
 
 def delete_task(idx):
     tasks = load_tasks()
-    if idx < 1 or idx > len(tasks):
-        print("Error: Invalid task number.")
-        return
-    tasks.pop(idx-1)
+    tasks.pop(idx-1)  # Bug: may crash on bad index!
     save_tasks(tasks)
     print("Task deleted.")
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 todo.py [add/list/complete/delete] [arguments]")
+        print("Missing command: add/list/complete/delete")
         return
     cmd = sys.argv[1]
     if cmd == "add":
-        if len(sys.argv) >= 3:
-            add_task(sys.argv[2])
-        else:
-            print("Error: Provide a task description.")
+        add_task(sys.argv[2])
     elif cmd == "list":
         list_tasks()
     elif cmd == "complete":
-        if len(sys.argv) >= 3 and sys.argv[2].isdigit():
-            complete_task(int(sys.argv[2]))
-        else:
-            print("Error: Provide a valid task number.")
+        complete_task(int(sys.argv[2]))
     elif cmd == "delete":
-        if len(sys.argv) >= 3 and sys.argv[2].isdigit():
-            delete_task(int(sys.argv[2]))
-        else:
-            print("Error: Provide a valid task number.")
+        delete_task(int(sys.argv[2]))
     else:
         print("Unknown command.")
 
